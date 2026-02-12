@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Agent Playground UI</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1>AI Agent Playground</h1>
+        <p>Test recommendation and course detail flows from ai_agent.</p>
+      </header>
+
+      <section class="panel">
+        <form id="chat-form" class="form">
+          <label>
+            Agent
+            <select id="agent" name="agent">
+              <option value="home-assistant">home-assistant</option>
+              <option value="course-assistant">course-assistant</option>
+            </select>
+          </label>
+
+          <label>
+            Course ID (optional)
+            <input id="course_id" name="course_id" type="number" min="1" placeholder="28" />
+          </label>
+
+          <label>
+            Message
+            <textarea
+              id="message"
+              name="message"
+              rows="4"
+              placeholder="berikan saya rekomendasi course mengenai kepemimpinan dong"
+            ></textarea>
+          </label>
+
+          <div class="actions">
+            <button id="submit-btn" type="submit">Send</button>
+            <button id="preset-reco" type="button">Preset Recommendation</button>
+            <button id="preset-detail" type="button">Preset Course Detail</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Display Message</h2>
+        <pre id="display-message" class="mono muted">No response yet.</pre>
+      </section>
+
+      <section class="panel">
+        <h2>Recommendation Items</h2>
+        <div id="items" class="cards"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Course Detail</h2>
+        <pre id="course-detail" class="mono muted">No course detail.</pre>
+      </section>
+
+      <section class="panel">
+        <h2>Debug (Raw JSON)</h2>
+        <pre id="raw-json" class="mono muted">No raw response.</pre>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+  </html>

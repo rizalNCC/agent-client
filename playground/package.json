@@ -3,7 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node index.mjs"
+    "start": "node index.mjs",
+    "recommend": "node index.mjs --agent home-assistant",
+    "detail": "node index.mjs --agent course-assistant --message \"rangkumin materi ini dong\"",
+    "ui": "node ui-server.mjs"
   },
   "dependencies": {
     "@rizal_ncc/agent-client": "file:..",
