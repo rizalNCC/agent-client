@@ -1,0 +1,45 @@
+{
+  "name": "@rizal_ncc/agent-client",
+  "version": "0.1.1",
+  "description": "Client SDK for BAWANA ai_agent API request/response handling",
+  "author": "BAWANA Team",
+  "license": "MIT",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && npm run build:lib && npm run build:types",
+    "build:lib": "vite build",
+    "build:types": "tsc -p tsconfig.types.json",
+    "release:check": "npm test && npm run build && npm pack --dry-run",
+    "release:publish": "npm publish --access public",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^24.7.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.4"
+  }
+}

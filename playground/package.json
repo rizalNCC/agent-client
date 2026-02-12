@@ -1,0 +1,12 @@
+{
+  "name": "agent-client-playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "@rizal_ncc/agent-client": "file:..",
+    "dotenv": "^16.6.1"
+  }
+}
