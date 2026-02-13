@@ -10,13 +10,13 @@ import {
 } from "react";
 import { ChatbotCore } from "../core/chatbot";
 import { extractRecommendationItems, extractRecommendationOutput } from "../lib/tool-results";
+import { mergeRecommendationItems } from "../lib/recommendation-pagination";
 import type {
   AgentMetadata,
   ChatMessage,
   ChatbotCoreConfig,
   ChatbotState,
   GenerateResponse,
-  RecommendationItem,
   RespondResponse
 } from "../core/types";
 
@@ -396,21 +396,7 @@ export function AiAgentChat({
 
         updateMessageById(messageId, (message) => {
           const current = Array.isArray(message.recommendations) ? message.recommendations : [];
-          const merged = [...current];
-          for (const item of newResults) {
-            if (!item || typeof item !== "object") {
-              continue;
-            }
-            const rec = item as RecommendationItem;
-            const exists = merged.some(
-              (existing) =>
-                (existing.id !== null && existing.id === rec.id) ||
-                (existing.url && rec.url && existing.url === rec.url)
-            );
-            if (!exists) {
-              merged.push(rec);
-            }
-          }
+          const merged = mergeRecommendationItems(current, newResults);
 
           return {
             ...message,
@@ -482,71 +468,73 @@ export function AiAgentChat({
             ) : null}
             <p>{message.content}</p>
             {Array.isArray(message.recommendations) && message.recommendations.length > 0 ? (
-              <div className="chat-carousel">
-                {message.recommendations.map((item) => {
-                  const status =
-                    typeof item.status === "string" && item.status.trim() ? item.status.trim() : "";
-                  const type = typeof item.type === "string" && item.type.trim() ? item.type.trim() : "";
-                  const hasProgress = typeof item.progress === "number" && Number.isFinite(item.progress);
-                  const progressValue = hasProgress
-                    ? Math.min(100, Math.max(0, Math.round(item.progress as number)))
-                    : 0;
+              <div className="ai-agent-chat__recommendation-block">
+                <div className="chat-carousel">
+                  {message.recommendations.map((item) => {
+                    const status =
+                      typeof item.status === "string" && item.status.trim() ? item.status.trim() : "";
+                    const type = typeof item.type === "string" && item.type.trim() ? item.type.trim() : "";
+                    const hasProgress = typeof item.progress === "number" && Number.isFinite(item.progress);
+                    const progressValue = hasProgress
+                      ? Math.min(100, Math.max(0, Math.round(item.progress as number)))
+                      : 0;
 
-                  return (
-                    <a
-                      className="chat-carousel-card"
-                      key={`${item.id || item.title}`}
-                      href={item.url || "#"}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <div className="chat-carousel-card-header">
-                        {type ? <span className="chat-carousel-chip chat-carousel-chip--type">{type}</span> : null}
-                        {status ? (
-                          <span
-                            className="chat-carousel-chip chat-carousel-chip--status"
-                            data-status={status.toLowerCase()}
-                          >
-                            {status}
-                          </span>
-                        ) : null}
-                        {item.in_playlist ? (
-                          <span className="chat-carousel-chip chat-carousel-chip--muted">In playlist</span>
-                        ) : null}
-                      </div>
-
-                      <div className="chat-carousel-card-content">
-                        <div className="chat-carousel-card-title">{item.title || "Untitled Course"}</div>
-                        <div className="chat-carousel-card-desc">{item.description || ""}</div>
-                      </div>
-
-                      <div className="chat-carousel-card-footer">
-                        <div className="chat-carousel-meta">
-                          {hasProgress ? (
-                            <>
-                              <span className="chat-carousel-meta-text">{progressValue}% complete</span>
-                              <div className="chat-carousel-progress">
-                                <div
-                                  className="chat-carousel-progress-bar"
-                                  style={{ width: `${progressValue}%` }}
-                                />
-                              </div>
-                            </>
+                    return (
+                      <a
+                        className="chat-carousel-card"
+                        key={`${item.id || item.title}`}
+                        href={item.url || "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <div className="chat-carousel-card-header">
+                          {type ? <span className="chat-carousel-chip chat-carousel-chip--type">{type}</span> : null}
+                          {status ? (
+                            <span
+                              className="chat-carousel-chip chat-carousel-chip--status"
+                              data-status={status.toLowerCase()}
+                            >
+                              {status}
+                            </span>
+                          ) : null}
+                          {item.in_playlist ? (
+                            <span className="chat-carousel-chip chat-carousel-chip--muted">In playlist</span>
                           ) : null}
                         </div>
 
-                        <div className="chat-carousel-cta">
-                          <span>View course</span>
-                          <span className="chat-carousel-cta-icon" />
+                        <div className="chat-carousel-card-content">
+                          <div className="chat-carousel-card-title">{item.title || "Untitled Course"}</div>
+                          <div className="chat-carousel-card-desc">{item.description || ""}</div>
                         </div>
-                      </div>
-                    </a>
-                  );
-                })}
+
+                        <div className="chat-carousel-card-footer">
+                          <div className="chat-carousel-meta">
+                            {hasProgress ? (
+                              <>
+                                <span className="chat-carousel-meta-text">{progressValue}% complete</span>
+                                <div className="chat-carousel-progress">
+                                  <div
+                                    className="chat-carousel-progress-bar"
+                                    style={{ width: `${progressValue}%` }}
+                                  />
+                                </div>
+                              </>
+                            ) : null}
+                          </div>
+
+                          <div className="chat-carousel-cta">
+                            <span>View course</span>
+                            <span className="chat-carousel-cta-icon" />
+                          </div>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
                 {message.recommendationNext ? (
                   <button
                     type="button"
-                    className="chat-carousel-loadmore"
+                    className="ai-agent-chat__loadmore"
                     onClick={() => void loadMoreRecommendations(message.id, message.recommendationNext!)}
                     disabled={Boolean(loadingMoreMessageIds[message.id])}
                   >
