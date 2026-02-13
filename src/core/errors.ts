@@ -1,33 +1,12 @@
-export type AiAgentErrorCode =
-  | "invalid_config"
-  | "fetch_unavailable"
-  | "http_error"
-  | "aborted"
-  | "network_error"
-  | "request_error";
+export class AiAgentCoreError extends Error {
+  readonly code: "invalid_config" | "aborted" | "response_error";
 
-export class AiAgentClientError extends Error {
-  readonly code: AiAgentErrorCode;
-
-  constructor(message: string, code: AiAgentErrorCode = "request_error") {
+  constructor(
+    message: string,
+    code: "invalid_config" | "aborted" | "response_error" = "response_error"
+  ) {
     super(message);
-    this.name = "AiAgentClientError";
+    this.name = "AiAgentCoreError";
     this.code = code;
-  }
-}
-
-export class AiAgentApiError extends AiAgentClientError {
-  readonly status: number;
-  readonly body: unknown;
-
-  constructor(message: string, status: number, body: unknown) {
-    super(message, "http_error");
-    this.name = "AiAgentApiError";
-    this.status = status;
-    this.body = body;
-  }
-
-  get data(): unknown {
-    return this.body;
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@rizal_ncc/agent-client",
-  "version": "0.1.1",
-  "description": "Client SDK for BAWANA ai_agent API request/response handling",
+  "version": "0.2.0",
+  "description": "UI wrapper and helpers for BAWANA AI agent integrations",
   "author": "BAWANA Team",
   "license": "MIT",
   "type": "module",
@@ -17,6 +17,12 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     },
+    "./react": {
+      "types": "./dist/types/react.d.ts",
+      "import": "./dist/react.mjs",
+      "require": "./dist/react.cjs"
+    },
+    "./style.css": "./dist/style.css",
     "./package.json": "./package.json"
   },
   "files": [
@@ -25,6 +31,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "dev": "vite",
     "clean": "rm -rf dist",
     "build": "npm run clean && npm run build:lib && npm run build:types",
     "build:lib": "vite build",
@@ -36,8 +43,25 @@
     "test:watch": "vitest"
   },
   "dependencies": {},
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
     "@types/node": "^24.7.1",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.8",
     "vitest": "^2.1.4"

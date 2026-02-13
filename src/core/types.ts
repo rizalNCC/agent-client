@@ -4,12 +4,6 @@ export interface AgentMetadata {
   course_id?: number;
 }
 
-export interface RespondRequest {
-  agent?: AgentName;
-  message: string;
-  metadata?: AgentMetadata;
-}
-
 export interface PromptInfo {
   version: string;
   hash: string;
@@ -30,46 +24,6 @@ export interface RespondResponse {
   response_id: string;
   prompt: PromptInfo;
   tool_results?: ToolResult[];
-}
-
-export interface HealthResponse {
-  ok: boolean;
-  checked: boolean;
-  model: string;
-  prompt: PromptInfo;
-  feature_enabled: boolean;
-  error?: string;
-  model_id?: string;
-}
-
-export interface RequestOptions {
-  signal?: AbortSignal;
-  timeoutMs?: number;
-  headers?: HeadersInit;
-  retry?: RetryOptions | false;
-}
-
-export interface AiAgentClientConfig {
-  baseUrl: string;
-  getAccessToken?: (() => string | undefined | Promise<string | undefined>) | string;
-  defaultHeaders?: HeadersInit;
-  timeoutMs?: number;
-  retry?: RetryOptions;
-  fetchImpl?: typeof fetch;
-  routes?: Partial<AiAgentRoutes>;
-}
-
-export interface AiAgentRoutes {
-  respond: string;
-  health: string;
-}
-
-export interface RetryOptions {
-  retries?: number;
-  backoffMs?: number;
-  maxBackoffMs?: number;
-  retryOnStatuses?: number[];
-  retryOnNetworkError?: boolean;
 }
 
 export interface RecommendationItem {
@@ -103,3 +57,49 @@ export interface CourseDetailOutput {
     tags: string[];
   };
 }
+
+export type ChatRole = "system" | "assistant" | "user";
+
+export interface ChatMessage {
+  id: string;
+  role: ChatRole;
+  content: string;
+  createdAt: string;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
+  recommendations?: RecommendationItem[];
+  toolResults?: ToolResult[];
+}
+
+export interface GenerateResponseRequest {
+  messages: ChatMessage[];
+  signal: AbortSignal;
+}
+
+export interface GenerateResponseResult {
+  content: string;
+  usage?: ChatMessage["usage"];
+  recommendations?: RecommendationItem[];
+  toolResults?: ToolResult[];
+}
+
+export type GenerateResponse = (
+  request: GenerateResponseRequest
+) => Promise<GenerateResponseResult>;
+
+export interface ChatbotCoreConfig {
+  generateResponse: GenerateResponse;
+  initialMessages?: ChatMessage[];
+  onMessage?: (message: ChatMessage, messages: ChatMessage[]) => void;
+  onError?: (error: Error, messages: ChatMessage[]) => void;
+}
+
+export interface ChatbotState {
+  messages: ChatMessage[];
+  isLoading: boolean;
+}
+
+export type ChatbotSubscriber = (state: ChatbotState) => void;

@@ -1,6 +1,5 @@
-export { AiAgentClient, createAiAgentClient } from "./core/client";
-export { AiAgentApiError, AiAgentClientError } from "./core/errors";
-export type { AiAgentErrorCode } from "./core/errors";
+export { ChatbotCore } from "./core/chatbot";
+export { AiAgentCoreError } from "./core/errors";
 
 export {
   extractCourseDetail,
@@ -9,20 +8,22 @@ export {
   getToolErrors,
   getToolResultsByName
 } from "./lib/tool-results";
-export { validateRespondRequest } from "./lib/validators";
 
 export type {
   AgentMetadata,
-  AiAgentClientConfig,
-  AiAgentRoutes,
+  AgentName,
+  ChatMessage,
+  ChatRole,
+  ChatbotCoreConfig,
+  ChatbotState,
+  ChatbotSubscriber,
   CourseDetailOutput,
-  HealthResponse,
+  GenerateResponse,
+  GenerateResponseRequest,
+  GenerateResponseResult,
   PromptInfo,
   RecommendationItem,
   RecommendationOutput,
-  RetryOptions,
-  RequestOptions,
-  RespondRequest,
   RespondResponse,
   ToolResult
 } from "./core/types";
