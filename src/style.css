@@ -168,7 +168,7 @@
 
 .ai-agent-chat__composer {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   gap: 0.45rem;
   padding: 0.75rem 0.9rem;
   border-top: 1px solid var(--chat-border);
@@ -186,12 +186,26 @@
 .ai-agent-chat__composer button {
   border: none;
   border-radius: 0.7rem;
-  padding: 0.56rem 0.82rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
   cursor: pointer;
   background: var(--chat-primary);
   color: var(--chat-primary-foreground);
   font-weight: 700;
-  font-size: 0.84rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-agent-chat__action svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.ai-agent-chat__action.is-stop {
+  background: #0f172a;
 }
 
 .ai-agent-chat__composer button[disabled] {
@@ -216,6 +230,7 @@
   }
 
   .ai-agent-chat__composer {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr auto;
+    align-items: center;
   }
 }

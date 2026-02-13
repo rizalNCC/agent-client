@@ -400,11 +400,23 @@ export function AiAgentChat({
           placeholder={placeholder}
           disabled={isLoading}
         />
-        <button type="submit" disabled={isLoading || !input.trim().length}>
-          {sendLabel}
-        </button>
-        <button type="button" onClick={stop} disabled={!isLoading}>
-          {stopLabel}
+        <button
+          type={isLoading ? "button" : "submit"}
+          onClick={isLoading ? stop : undefined}
+          className={`ai-agent-chat__action ${isLoading ? "is-stop" : "is-send"}`}
+          disabled={!isLoading && !input.trim().length}
+          aria-label={isLoading ? stopLabel : sendLabel}
+          title={isLoading ? stopLabel : sendLabel}
+        >
+          {isLoading ? (
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="7" y="7" width="10" height="10" rx="2" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M3 11.5 20.5 4c.8-.3 1.5.5 1.2 1.2L14.2 22.7c-.4 1-1.8 1-2.2 0l-2.1-5.1-5.1-2.1c-1-.4-1-1.8 0-2.2Z" />
+            </svg>
+          )}
         </button>
       </form>
 
