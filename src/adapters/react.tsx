@@ -9,13 +9,14 @@ import {
   type ReactNode
 } from "react";
 import { ChatbotCore } from "../core/chatbot";
-import { extractRecommendationItems } from "../lib/tool-results";
+import { extractRecommendationItems, extractRecommendationOutput } from "../lib/tool-results";
 import type {
   AgentMetadata,
   ChatMessage,
   ChatbotCoreConfig,
   ChatbotState,
   GenerateResponse,
+  RecommendationItem,
   RespondResponse
 } from "../core/types";
 
@@ -24,6 +25,10 @@ const EMPTY_METADATA: AgentMetadata = {};
 export interface UseAiAgentChatResult extends ChatbotState {
   sendMessage: (text: string) => Promise<ChatMessage | undefined>;
   stop: () => void;
+  updateMessageById: (
+    messageId: string,
+    updater: (message: ChatMessage) => ChatMessage
+  ) => void;
 }
 
 export function useAiAgentChat(config: ChatbotCoreConfig): UseAiAgentChatResult {
@@ -62,10 +67,21 @@ export function useAiAgentChat(config: ChatbotCoreConfig): UseAiAgentChatResult 
     coreRef.current.stop();
   }, []);
 
+  const updateMessageById = useCallback(
+    (messageId: string, updater: (message: ChatMessage) => ChatMessage) => {
+      if (!coreRef.current) {
+        return;
+      }
+      coreRef.current.updateMessageById(messageId, updater);
+    },
+    []
+  );
+
   return {
     ...state,
     sendMessage,
-    stop
+    stop,
+    updateMessageById
   };
 }
 
@@ -197,6 +213,7 @@ export function AiAgentChat({
 }: AiAgentChatProps) {
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [loadingMoreMessageIds, setLoadingMoreMessageIds] = useState<Record<string, boolean>>({});
   const resolvedMetadata = useMemo(() => metadata || EMPTY_METADATA, [metadata]);
   const normalizedSuggestions = useMemo(
     () =>
@@ -256,10 +273,12 @@ export function AiAgentChat({
       }
 
       const backendResponse = raw as RespondResponse;
+      const recommendationOutput = extractRecommendationOutput(backendResponse);
       return {
         content: backendResponse.message,
         toolResults: backendResponse.tool_results,
-        recommendations: extractRecommendationItems(backendResponse)
+        recommendations: extractRecommendationItems(backendResponse),
+        recommendationNext: recommendationOutput?.next ?? null
       };
     },
     [
@@ -287,7 +306,7 @@ export function AiAgentChat({
     [onError, onMessage, transport]
   );
 
-  const { messages, isLoading, sendMessage, stop } = useAiAgentChat(stableConfig);
+  const { messages, isLoading, sendMessage, stop, updateMessageById } = useAiAgentChat(stableConfig);
 
   const onSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -326,6 +345,87 @@ export function AiAgentChat({
   );
 
   const hasUserMessage = messages.some((message) => message.role === "user");
+  const loadMoreRecommendations = useCallback(
+    async (messageId: string, nextUrl: string) => {
+      if (!nextUrl || loadingMoreMessageIds[messageId]) {
+        return;
+      }
+      if (!baseURL || !baseURL.trim()) {
+        setErrorMessage("Cannot load more: baseURL is missing.");
+        return;
+      }
+
+      const token = await resolveAccessToken(accessToken);
+      if (!token) {
+        setErrorMessage("Cannot load more: accessToken is missing.");
+        return;
+      }
+
+      setLoadingMoreMessageIds((prev) => ({ ...prev, [messageId]: true }));
+      try {
+        const headers = new Headers(requestHeaders);
+        headers.set("authorization", `Bearer ${token}`);
+
+        const requestUrl = new URL(nextUrl, `${normalizeBaseURL(baseURL)}/`).toString();
+        const response = await fetch(requestUrl, {
+          method: "GET",
+          headers
+        });
+        const raw = (await response.json()) as {
+          next?: string | null;
+          results?: unknown[];
+          detail?: string;
+          message?: string;
+        };
+
+        if (!response.ok) {
+          const detail =
+            typeof raw?.detail === "string"
+              ? raw.detail
+              : typeof raw?.message === "string"
+                ? raw.message
+                : "";
+          throw new Error(
+            `Load more failed (${response.status})${detail ? `: ${detail}` : ""}`
+          );
+        }
+
+        const newResults = Array.isArray(raw?.results) ? raw.results : [];
+        const nextPointer =
+          typeof raw?.next === "string" || raw?.next === null ? raw.next : null;
+
+        updateMessageById(messageId, (message) => {
+          const current = Array.isArray(message.recommendations) ? message.recommendations : [];
+          const merged = [...current];
+          for (const item of newResults) {
+            if (!item || typeof item !== "object") {
+              continue;
+            }
+            const rec = item as RecommendationItem;
+            const exists = merged.some(
+              (existing) =>
+                (existing.id !== null && existing.id === rec.id) ||
+                (existing.url && rec.url && existing.url === rec.url)
+            );
+            if (!exists) {
+              merged.push(rec);
+            }
+          }
+
+          return {
+            ...message,
+            recommendations: merged,
+            recommendationNext: nextPointer
+          };
+        });
+      } catch (error) {
+        setErrorMessage(error instanceof Error ? error.message : "Failed to load more recommendations.");
+      } finally {
+        setLoadingMoreMessageIds((prev) => ({ ...prev, [messageId]: false }));
+      }
+    },
+    [accessToken, baseURL, loadingMoreMessageIds, requestHeaders, updateMessageById]
+  );
   const themeStyle = useMemo(
     () =>
       ({
@@ -383,7 +483,7 @@ export function AiAgentChat({
             <p>{message.content}</p>
             {Array.isArray(message.recommendations) && message.recommendations.length > 0 ? (
               <div className="chat-carousel">
-                {message.recommendations.slice(0, 8).map((item) => {
+                {message.recommendations.map((item) => {
                   const status =
                     typeof item.status === "string" && item.status.trim() ? item.status.trim() : "";
                   const type = typeof item.type === "string" && item.type.trim() ? item.type.trim() : "";
@@ -443,6 +543,16 @@ export function AiAgentChat({
                     </a>
                   );
                 })}
+                {message.recommendationNext ? (
+                  <button
+                    type="button"
+                    className="chat-carousel-loadmore"
+                    onClick={() => void loadMoreRecommendations(message.id, message.recommendationNext!)}
+                    disabled={Boolean(loadingMoreMessageIds[message.id])}
+                  >
+                    {loadingMoreMessageIds[message.id] ? "Loading..." : "Load more"}
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </article>

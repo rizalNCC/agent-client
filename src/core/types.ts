@@ -71,6 +71,7 @@ export interface ChatMessage {
     total_tokens?: number;
   };
   recommendations?: RecommendationItem[];
+  recommendationNext?: string | null;
   toolResults?: ToolResult[];
 }
 
@@ -83,6 +84,7 @@ export interface GenerateResponseResult {
   content: string;
   usage?: ChatMessage["usage"];
   recommendations?: RecommendationItem[];
+  recommendationNext?: string | null;
   toolResults?: ToolResult[];
 }
 

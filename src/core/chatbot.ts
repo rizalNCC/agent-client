@@ -132,6 +132,20 @@ export class ChatbotCore {
     }
   }
 
+  updateMessageById(
+    messageId: string,
+    updater: (message: ChatMessage) => ChatMessage
+  ): void {
+    const index = this.state.messages.findIndex((message) => message.id === messageId);
+    if (index < 0) {
+      return;
+    }
+
+    const nextMessages = [...this.state.messages];
+    nextMessages[index] = updater(nextMessages[index]);
+    this.setState({ messages: nextMessages });
+  }
+
   private createAssistantMessage(response: GenerateResponseResult): ChatMessage {
     const content =
       response && typeof response.content === "string" ? response.content.trim() : "";
@@ -147,6 +161,7 @@ export class ChatbotCore {
       ...createMessage("assistant", content),
       usage: response.usage,
       recommendations: response.recommendations,
+      recommendationNext: response.recommendationNext ?? null,
       toolResults: response.toolResults
     };
   }
