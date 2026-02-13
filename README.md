@@ -45,10 +45,17 @@ Common props:
 - `headerDescription?: string`
 - `assistantAvatar?: ReactNode` custom avatar component slot
 - `assistantAvatarUrl?: string` avatar URL override (default `/ai-img.svg`)
+- `initials?: boolean` show/hide assistant and user initials (default `true`)
 - `primaryColor?: string` theme color (default `#1168bb`)
 - `primaryForeground?: string` text color on primary surfaces (default `#ffffff`)
 - `metadata?: { course_id?: number }`
 - `requestHeaders?: HeadersInit`
+
+UX behavior:
+
+- Composer uses one combined icon action button:
+- idle state: send icon
+- loading state: stop icon
 
 Advanced:
 
