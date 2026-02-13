@@ -86,6 +86,7 @@ export interface AiAgentChatProps {
   assistantAvatarUrl?: string;
   assistantInitials?: string;
   userInitials?: string;
+  initials?: boolean;
   primaryColor?: string;
   primaryForeground?: string;
   className?: string;
@@ -184,6 +185,7 @@ export function AiAgentChat({
   assistantAvatarUrl = "/ai-img.svg",
   assistantInitials = "AI",
   userInitials = "YOU",
+  initials = true,
   primaryColor = "#1168bb",
   primaryForeground = "#ffffff",
   onMessage,
@@ -343,7 +345,7 @@ export function AiAgentChat({
           ) : assistantAvatarUrl ? (
             <img src={assistantAvatarUrl} alt="" />
           ) : (
-            assistantInitials
+            (initials ? assistantInitials : "")
           )}
         </div>
         <div className="ai-agent-chat__header-copy">
@@ -373,9 +375,11 @@ export function AiAgentChat({
             key={message.id}
             className={`ai-agent-chat__message ai-agent-chat__message--${message.role}`}
           >
-            <span className="ai-agent-chat__message-role">
-              {message.role === "assistant" ? assistantInitials : userInitials}
-            </span>
+            {initials ? (
+              <span className="ai-agent-chat__message-role">
+                {message.role === "assistant" ? assistantInitials : userInitials}
+              </span>
+            ) : null}
             <p>{message.content}</p>
             {Array.isArray(message.recommendations) && message.recommendations.length > 0 ? (
               <ul className="ai-agent-chat__recommendations">
