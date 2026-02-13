@@ -29,7 +29,7 @@ describe("mergeRecommendationItems", () => {
     expect(merged[9].id).toBe(10);
   });
 
-  it("deduplicates by id and url", () => {
+  it("keeps duplicate entries while dedupe is disabled", () => {
     const current = [rec(1), rec(2)];
     const incoming = [
       rec(2),
@@ -39,8 +39,8 @@ describe("mergeRecommendationItems", () => {
 
     const merged = mergeRecommendationItems(current, incoming);
 
-    expect(merged).toHaveLength(3);
-    expect(merged.map((item) => item.id)).toEqual([1, 2, 4]);
+    expect(merged).toHaveLength(5);
+    expect(merged.map((item) => item.id)).toEqual([1, 2, 2, null, 4]);
   });
 
   it("ignores invalid incoming objects", () => {
