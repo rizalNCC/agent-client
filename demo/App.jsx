@@ -11,7 +11,6 @@ function readEnv(name) {
 const BASE_URL = readEnv("VITE_API_BASE_URL").replace(/\/+$/, "");
 const ACCESS_TOKEN = readEnv("VITE_AI_AGENT_TOKEN");
 const AGENT = readEnv("VITE_AI_AGENT_AGENT");
-const RESPOND_PATH = "/v2/ai-agent/respond/";
 
 export default function App() {
   return (
@@ -27,7 +26,6 @@ export default function App() {
 
       <AiAgentChat
         baseURL={BASE_URL}
-        respondPath={RESPOND_PATH}
         accessToken={ACCESS_TOKEN}
         agent={AGENT}
         initialMessages={[

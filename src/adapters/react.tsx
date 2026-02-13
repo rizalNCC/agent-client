@@ -94,6 +94,19 @@ function normalizeBaseURL(baseURL: string): string {
   return baseURL.replace(/\/+$/, "");
 }
 
+function resolveRespondPath(baseURL: string, overridePath?: string): string {
+  if (overridePath && overridePath.trim()) {
+    return normalizePath(overridePath.trim());
+  }
+
+  const normalizedBase = normalizeBaseURL(baseURL);
+  if (normalizedBase.endsWith("/api")) {
+    return "/v2/ai-agent/respond/";
+  }
+
+  return "/api/v2/ai-agent/respond/";
+}
+
 function normalizePath(path: string): string {
   if (!path) {
     return "/api/v2/ai-agent/respond/";
@@ -147,7 +160,8 @@ export function AiAgentChat({
 
       const latestUser = [...messages].reverse().find((item) => item.role === "user");
       const userMessage = latestUser?.content || "";
-      const response = await fetch(`${normalizeBaseURL(baseURL)}${normalizePath(respondPath)}`, {
+      const resolvedPath = resolveRespondPath(baseURL, respondPath);
+      const response = await fetch(`${normalizeBaseURL(baseURL)}${resolvedPath}`, {
         method: "POST",
         headers,
         body: JSON.stringify({
