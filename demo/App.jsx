@@ -29,7 +29,7 @@ export default function App() {
         accessToken={ACCESS_TOKEN}
         agent={AGENT}
         initials={false}
-        primaryColor="#1bbbae"
+        primaryColor="#8bbb1b"
         primaryForeground="#ffffff"
         headerTitle="BAWANA Assistant"
         headerDescription="Online and ready to help"

@@ -538,7 +538,14 @@ export function AiAgentChat({
                     onClick={() => void loadMoreRecommendations(message.id, message.recommendationNext!)}
                     disabled={Boolean(loadingMoreMessageIds[message.id])}
                   >
-                    {loadingMoreMessageIds[message.id] ? "Loading..." : "Load more"}
+                    {loadingMoreMessageIds[message.id] ? (
+                      <>
+                        <span className="ai-agent-chat__spinner" aria-hidden="true" />
+                        Loading...
+                      </>
+                    ) : (
+                      "Load more"
+                    )}
                   </button>
                 ) : null}
               </div>

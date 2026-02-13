@@ -68,6 +68,12 @@ Path behavior (built-in transport):
 - If `baseURL` ends with `/api` -> uses `/v2/ai-agent/respond/`
 - Otherwise -> uses `/api/v2/ai-agent/respond/`
 
+Recommendation UI behavior:
+
+- `get_course_recommendation` results are rendered as a horizontal carousel card list.
+- If backend returns `next` in recommendation output, a `Load more` button appears below the carousel.
+- Clicking `Load more` fetches the `next` URL automatically (with current bearer token) and appends deduplicated results.
+
 ## Headless Core Usage
 
 ```ts
