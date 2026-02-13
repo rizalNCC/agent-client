@@ -71,6 +71,11 @@ export interface AiAgentChatProps {
   metadata?: AgentMetadata;
   requestHeaders?: HeadersInit;
   respondPath?: string;
+  headerTitle?: string;
+  headerDescription?: string;
+  assistantAvatarUrl?: string;
+  assistantInitials?: string;
+  userInitials?: string;
   className?: string;
   placeholder?: string;
   sendLabel?: string;
@@ -126,6 +131,11 @@ export function AiAgentChat({
   requestHeaders,
   respondPath = "/api/v2/ai-agent/respond/",
   suggestedMessages = [],
+  headerTitle = "BAWANA Assistant",
+  headerDescription = "Online and ready to help",
+  assistantAvatarUrl = "/ai-img.svg",
+  assistantInitials = "AI",
+  userInitials = "YOU",
   onMessage,
   onError,
   className = "",
@@ -267,6 +277,16 @@ export function AiAgentChat({
 
   return (
     <section className={`ai-agent-chat ${className}`.trim()}>
+      <header className="ai-agent-chat__header">
+        <div className="ai-agent-chat__header-avatar" aria-hidden="true">
+          {assistantAvatarUrl ? <img src={assistantAvatarUrl} alt="" /> : assistantInitials}
+        </div>
+        <div className="ai-agent-chat__header-copy">
+          <strong>{headerTitle}</strong>
+          <span>{headerDescription}</span>
+        </div>
+      </header>
+
       {!hasUserMessage && normalizedSuggestions.length > 0 ? (
         <div className="ai-agent-chat__suggestions">
           {normalizedSuggestions.map((text) => (
@@ -288,13 +308,17 @@ export function AiAgentChat({
             key={message.id}
             className={`ai-agent-chat__message ai-agent-chat__message--${message.role}`}
           >
+            <span className="ai-agent-chat__message-role">
+              {message.role === "assistant" ? assistantInitials : userInitials}
+            </span>
             <p>{message.content}</p>
             {Array.isArray(message.recommendations) && message.recommendations.length > 0 ? (
-              <ul>
+              <ul className="ai-agent-chat__recommendations">
                 {message.recommendations.slice(0, 5).map((item) => (
-                  <li key={`${item.id || item.title}`}>
+                  <li className="ai-agent-chat__recommendation-card" key={`${item.id || item.title}`}>
                     <a href={item.url} target="_blank" rel="noreferrer">
-                      {item.title}
+                      <strong>{item.title}</strong>
+                      <span>{item.description}</span>
                     </a>
                   </li>
                 ))}

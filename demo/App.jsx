@@ -28,6 +28,8 @@ export default function App() {
         baseURL={BASE_URL}
         accessToken={ACCESS_TOKEN}
         agent={AGENT}
+        headerTitle="BAWANA Assistant"
+        headerDescription="Online and ready to help"
         suggestedMessages={[
           "recommend leadership course",
           "recommend data analysis course",
