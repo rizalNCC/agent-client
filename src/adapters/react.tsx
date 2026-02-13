@@ -10,6 +10,8 @@ import type {
   RespondResponse
 } from "../core/types";
 
+const EMPTY_METADATA: AgentMetadata = {};
+
 export interface UseAiAgentChatResult extends ChatbotState {
   sendMessage: (text: string) => Promise<ChatMessage | undefined>;
   stop: () => void;
@@ -107,7 +109,7 @@ export function AiAgentChat({
   baseURL,
   accessToken,
   agent = "home-assistant",
-  metadata = {},
+  metadata,
   requestHeaders,
   respondPath = "/api/v2/ai-agent/respond/",
   initialMessages,
@@ -120,6 +122,8 @@ export function AiAgentChat({
 }: AiAgentChatProps) {
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const resolvedMetadata = useMemo(() => metadata || EMPTY_METADATA, [metadata]);
+
   const transport = useCallback<GenerateResponse>(
     async ({ messages, signal }) => {
       if (typeof generateResponse === "function") {
@@ -149,7 +153,7 @@ export function AiAgentChat({
         body: JSON.stringify({
           agent,
           message: userMessage,
-          metadata
+          metadata: resolvedMetadata
         }),
         signal
       });
@@ -174,7 +178,7 @@ export function AiAgentChat({
         recommendations: extractRecommendationItems(backendResponse)
       };
     },
-    [accessToken, agent, baseURL, generateResponse, metadata, requestHeaders, respondPath]
+    [accessToken, agent, baseURL, generateResponse, requestHeaders, respondPath, resolvedMetadata]
   );
 
   const stableConfig = useMemo<ChatbotCoreConfig>(
