@@ -16,6 +16,21 @@
   overflow-y: auto;
 }
 
+.ai-agent-chat__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-agent-chat__suggestions button {
+  border: 1px solid #c7d2e0;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #0f2a43;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
 .ai-agent-chat__message {
   border-radius: 10px;
   padding: 8px 10px;

@@ -28,13 +28,10 @@ export default function App() {
         baseURL={BASE_URL}
         accessToken={ACCESS_TOKEN}
         agent={AGENT}
-        initialMessages={[
-          {
-            id: "assistant_welcome",
-            role: "assistant",
-            content: "Hi! Ask me for course recommendations.",
-            createdAt: new Date().toISOString(),
-          },
+        suggestedMessages={[
+          "recommend leadership course",
+          "recommend data analysis course",
+          "recommend communication course"
         ]}
       />
     </main>

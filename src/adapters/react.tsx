@@ -20,7 +20,7 @@ export interface UseAiAgentChatResult extends ChatbotState {
 export function useAiAgentChat(config: ChatbotCoreConfig): UseAiAgentChatResult {
   const coreRef = useRef<ChatbotCore | null>(null);
   const [state, setState] = useState<ChatbotState>({
-    messages: config.initialMessages || [],
+    messages: [],
     isLoading: false
   });
 
@@ -62,7 +62,7 @@ export function useAiAgentChat(config: ChatbotCoreConfig): UseAiAgentChatResult 
 
 export interface AiAgentChatProps {
   generateResponse?: GenerateResponse;
-  initialMessages?: ChatMessage[];
+  suggestedMessages?: string[];
   onMessage?: ChatbotCoreConfig["onMessage"];
   onError?: ChatbotCoreConfig["onError"];
   baseURL?: string;
@@ -125,7 +125,7 @@ export function AiAgentChat({
   metadata,
   requestHeaders,
   respondPath = "/api/v2/ai-agent/respond/",
-  initialMessages,
+  suggestedMessages = [],
   onMessage,
   onError,
   className = "",
@@ -136,6 +136,13 @@ export function AiAgentChat({
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const resolvedMetadata = useMemo(() => metadata || EMPTY_METADATA, [metadata]);
+  const normalizedSuggestions = useMemo(
+    () =>
+      Array.isArray(suggestedMessages)
+        ? suggestedMessages.filter((item) => typeof item === "string" && item.trim().length > 0)
+        : [],
+    [suggestedMessages]
+  );
 
   const transport = useCallback<GenerateResponse>(
     async ({ messages, signal }) => {
@@ -160,6 +167,7 @@ export function AiAgentChat({
 
       const latestUser = [...messages].reverse().find((item) => item.role === "user");
       const userMessage = latestUser?.content || "";
+
       const resolvedPath = resolveRespondPath(baseURL, respondPath);
       const response = await fetch(`${normalizeBaseURL(baseURL)}${resolvedPath}`, {
         method: "POST",
@@ -192,13 +200,20 @@ export function AiAgentChat({
         recommendations: extractRecommendationItems(backendResponse)
       };
     },
-    [accessToken, agent, baseURL, generateResponse, requestHeaders, respondPath, resolvedMetadata]
+    [
+      accessToken,
+      agent,
+      baseURL,
+      generateResponse,
+      requestHeaders,
+      respondPath,
+      resolvedMetadata
+    ]
   );
 
   const stableConfig = useMemo<ChatbotCoreConfig>(
     () => ({
       generateResponse: transport,
-      initialMessages,
       onMessage,
       onError: (error, messages) => {
         setErrorMessage(error.message);
@@ -207,7 +222,7 @@ export function AiAgentChat({
         }
       }
     }),
-    [initialMessages, onError, onMessage, transport]
+    [onError, onMessage, transport]
   );
 
   const { messages, isLoading, sendMessage, stop } = useAiAgentChat(stableConfig);
@@ -231,8 +246,42 @@ export function AiAgentChat({
     [input, isLoading, sendMessage]
   );
 
+  const onSuggestionClick = useCallback(
+    async (text: string) => {
+      if (isLoading) {
+        return;
+      }
+      setErrorMessage("");
+      setInput("");
+      try {
+        await sendMessage(text);
+      } catch (error) {
+        const nextError = error instanceof Error ? error.message : "Failed to send message.";
+        setErrorMessage(nextError);
+      }
+    },
+    [isLoading, sendMessage]
+  );
+
+  const hasUserMessage = messages.some((message) => message.role === "user");
+
   return (
     <section className={`ai-agent-chat ${className}`.trim()}>
+      {!hasUserMessage && normalizedSuggestions.length > 0 ? (
+        <div className="ai-agent-chat__suggestions">
+          {normalizedSuggestions.map((text) => (
+            <button
+              key={text}
+              type="button"
+              onClick={() => void onSuggestionClick(text)}
+              disabled={isLoading}
+            >
+              {text}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div className="ai-agent-chat__messages" role="log" aria-live="polite">
         {messages.map((message) => (
           <article

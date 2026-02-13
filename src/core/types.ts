@@ -92,7 +92,6 @@ export type GenerateResponse = (
 
 export interface ChatbotCoreConfig {
   generateResponse: GenerateResponse;
-  initialMessages?: ChatMessage[];
   onMessage?: (message: ChatMessage, messages: ChatMessage[]) => void;
   onError?: (error: Error, messages: ChatMessage[]) => void;
 }

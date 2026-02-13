@@ -16,22 +16,6 @@ function createMessage(role: ChatMessage["role"], content: string): ChatMessage 
   };
 }
 
-function normalizeInitialMessages(messages?: ChatMessage[]): ChatMessage[] {
-  if (!Array.isArray(messages)) {
-    return [];
-  }
-
-  return messages
-    .filter((item) => item && typeof item.content === "string")
-    .map((item) => ({
-      ...item,
-      content: item.content.trim(),
-      createdAt: item.createdAt || new Date().toISOString(),
-      id: item.id || `msg_${Math.random().toString(36).slice(2, 10)}`
-    }))
-    .filter((item) => item.content.length > 0);
-}
-
 export class ChatbotCore {
   private config: ChatbotCoreConfig;
   private subscribers = new Set<ChatbotSubscriber>();
@@ -48,7 +32,7 @@ export class ChatbotCore {
 
     this.config = config;
     this.state = {
-      messages: normalizeInitialMessages(config.initialMessages),
+      messages: [],
       isLoading: false
     };
   }
