@@ -1,13 +1,8 @@
 # @rizal_ncc/agent-client
 
-UI wrapper + typed helpers for `nems/ai_agent` integrations.
+Frontend UI wrapper + typed helpers for `nems/ai_agent`.
 
-This package is now frontend-only:
-- No built-in backend HTTP client
-- No OpenAI calls inside the package
-- Network/transport is injected via `generateResponse`
-
-`backend-documentation.md` remains the source-of-truth contract for `respond` payload and `tool_results` schema.
+`backend-documentation.md` is the source-of-truth contract for backend payload and `tool_results` schema.
 
 ## Install
 
@@ -24,13 +19,47 @@ import "@rizal_ncc/agent-client/style.css";
 export function App() {
   return (
     <AiAgentChat
-      baseURL="https://api.example.com"
+      baseURL="https://api.example.com/api"
       accessToken="your-access-token-here"
       agent="home-assistant"
+      primaryColor="#0f766e"
+      primaryForeground="#ffffff"
+      suggestedMessages={[
+        "recommend leadership course",
+        "recommend data analysis course"
+      ]}
     />
   );
 }
 ```
+
+## Chat Component Props (AiAgentChat)
+
+Common props:
+
+- `baseURL: string` backend base URL
+- `accessToken: string | () => string | Promise<string>` bearer token provider
+- `agent?: string` default `home-assistant`
+- `suggestedMessages?: string[]` clickable prompt chips
+- `headerTitle?: string`
+- `headerDescription?: string`
+- `assistantAvatar?: ReactNode` custom avatar component slot
+- `assistantAvatarUrl?: string` avatar URL override (default `/ai-img.svg`)
+- `primaryColor?: string` theme color (default `#1168bb`)
+- `primaryForeground?: string` text color on primary surfaces (default `#ffffff`)
+- `metadata?: { course_id?: number }`
+- `requestHeaders?: HeadersInit`
+
+Advanced:
+
+- `generateResponse?: (request) => Promise<{ content: string }>` custom transport override
+- `respondPath?: string` manual endpoint override
+- `onMessage?`, `onError?`
+
+Path behavior (built-in transport):
+
+- If `baseURL` ends with `/api` -> uses `/v2/ai-agent/respond/`
+- Otherwise -> uses `/api/v2/ai-agent/respond/`
 
 ## Headless Core Usage
 
@@ -47,7 +76,7 @@ console.log(bot.getState().messages);
 
 ## Backend Tool Helpers
 
-Helpers parse backend `tool_results` from `POST /api/v2/ai-agent/respond/`:
+Helpers for backend `tool_results`:
 
 - `getToolResultsByName(response, toolName)`
 - `extractRecommendationOutput(response)`
@@ -55,7 +84,8 @@ Helpers parse backend `tool_results` from `POST /api/v2/ai-agent/respond/`:
 - `extractCourseDetail(response)`
 - `getToolErrors(response)`
 
-These helpers follow `agent-client/backend-documentation.md` contracts:
+Tool names follow backend contracts:
+
 - `get_course_recommendation`
 - `get_course_detail`
 
@@ -74,20 +104,12 @@ npm test
 npm run build
 ```
 
-`npm run dev` starts a root-level Vite playground (`index.html` + `demo/*`) so you can test the wrapper without creating a nested project.
+`npm run dev` starts the root-level Vite playground (`index.html` + `demo/*`).
 
-Playground API config:
+Demo env:
 
 ```bash
-# optional: defaults to http://ncc-stg.api.bawana:8000
-export VITE_API_BASE_URL=http://ncc-stg.api.bawana:8000/api/
-
-# or set in .env
-export VITE_AI_AGENT_TOKEN=<access_token>
-```
-
-You can also set token in browser:
-
-```js
-localStorage.setItem("access_token", "<access_token>");
+VITE_API_BASE_URL=http://ncc-stg.api.bawana:8000/api/
+VITE_AI_AGENT_TOKEN=<access_token>
+VITE_AI_AGENT_AGENT=home-assistant
 ```

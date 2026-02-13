@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode
+} from "react";
 import { ChatbotCore } from "../core/chatbot";
 import { extractRecommendationItems } from "../lib/tool-results";
 import type {
@@ -73,9 +82,12 @@ export interface AiAgentChatProps {
   respondPath?: string;
   headerTitle?: string;
   headerDescription?: string;
+  assistantAvatar?: ReactNode;
   assistantAvatarUrl?: string;
   assistantInitials?: string;
   userInitials?: string;
+  primaryColor?: string;
+  primaryForeground?: string;
   className?: string;
   placeholder?: string;
   sendLabel?: string;
@@ -97,6 +109,41 @@ async function resolveAccessToken(
 
 function normalizeBaseURL(baseURL: string): string {
   return baseURL.replace(/\/+$/, "");
+}
+
+function hexToRgb(hex: string): string | null {
+  const value = hex.trim().replace("#", "");
+  if (![3, 6].includes(value.length) || !/^[a-fA-F0-9]+$/.test(value)) {
+    return null;
+  }
+  const full = value.length === 3 ? value.split("").map((char) => `${char}${char}`).join("") : value;
+  const red = Number.parseInt(full.slice(0, 2), 16);
+  const green = Number.parseInt(full.slice(2, 4), 16);
+  const blue = Number.parseInt(full.slice(4, 6), 16);
+  return `${red}, ${green}, ${blue}`;
+}
+
+function resolvePrimaryRgb(color: string): string {
+  const fromHex = hexToRgb(color);
+  if (fromHex) {
+    return fromHex;
+  }
+
+  const rgbMatch = color.match(/rgba?\(([^)]+)\)/i);
+  if (!rgbMatch) {
+    return "17, 104, 187";
+  }
+
+  const channels = rgbMatch[1]
+    .split(",")
+    .slice(0, 3)
+    .map((part) => Number.parseFloat(part.trim()))
+    .filter((value) => Number.isFinite(value));
+  if (channels.length !== 3) {
+    return "17, 104, 187";
+  }
+
+  return `${channels[0]}, ${channels[1]}, ${channels[2]}`;
 }
 
 function resolveRespondPath(baseURL: string, overridePath?: string): string {
@@ -133,9 +180,12 @@ export function AiAgentChat({
   suggestedMessages = [],
   headerTitle = "BAWANA Assistant",
   headerDescription = "Online and ready to help",
+  assistantAvatar,
   assistantAvatarUrl = "/ai-img.svg",
   assistantInitials = "AI",
   userInitials = "YOU",
+  primaryColor = "#1168bb",
+  primaryForeground = "#ffffff",
   onMessage,
   onError,
   className = "",
@@ -274,12 +324,27 @@ export function AiAgentChat({
   );
 
   const hasUserMessage = messages.some((message) => message.role === "user");
+  const themeStyle = useMemo(
+    () =>
+      ({
+        "--chat-primary": primaryColor,
+        "--chat-primary-rgb": resolvePrimaryRgb(primaryColor),
+        "--chat-primary-foreground": primaryForeground
+      }) as CSSProperties,
+    [primaryColor, primaryForeground]
+  );
 
   return (
-    <section className={`ai-agent-chat ${className}`.trim()}>
+    <section className={`ai-agent-chat ${className}`.trim()} style={themeStyle}>
       <header className="ai-agent-chat__header">
         <div className="ai-agent-chat__header-avatar" aria-hidden="true">
-          {assistantAvatarUrl ? <img src={assistantAvatarUrl} alt="" /> : assistantInitials}
+          {assistantAvatar ? (
+            assistantAvatar
+          ) : assistantAvatarUrl ? (
+            <img src={assistantAvatarUrl} alt="" />
+          ) : (
+            assistantInitials
+          )}
         </div>
         <div className="ai-agent-chat__header-copy">
           <strong>{headerTitle}</strong>

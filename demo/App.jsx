@@ -25,15 +25,17 @@ export default function App() {
       </header>
 
       <AiAgentChat
+        primaryColor="#1bbbae"
+        primaryForeground="#ffffff"
         baseURL={BASE_URL}
         accessToken={ACCESS_TOKEN}
         agent={AGENT}
         headerTitle="BAWANA Assistant"
         headerDescription="Online and ready to help"
         suggestedMessages={[
-          "recommend leadership course",
+          "hai siapa kamu ?",
           "recommend data analysis course",
-          "recommend communication course"
+          "recommend communication course",
         ]}
       />
     </main>
