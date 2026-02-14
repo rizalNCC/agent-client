@@ -1,3 +1,5 @@
+[![Node.js Package](https://github.com/rizalNCC/agent-client/actions/workflows/npm-publish.yml/badge.svg)](https://github.com/rizalNCC/agent-client/actions/workflows/npm-publish.yml)
+
 # @rizal_ncc/agent-client
 
 Frontend UI wrapper + typed helpers for `nems/ai_agent`.
