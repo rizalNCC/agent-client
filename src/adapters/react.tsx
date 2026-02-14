@@ -622,6 +622,21 @@ export function AiAgentChat({
                       </a>
                     );
                   })}
+                  {loadingMoreMessageIds[message.id]
+                    ? Array.from({ length: 3 }).map((_, index) => (
+                        <div
+                          key={`skeleton-${message.id}-${index}`}
+                          className="chat-carousel-card chat-carousel-card--skeleton"
+                          aria-hidden="true"
+                        >
+                          <div className="chat-carousel-skeleton-line chat-carousel-skeleton-line--chip" />
+                          <div className="chat-carousel-skeleton-line chat-carousel-skeleton-line--title" />
+                          <div className="chat-carousel-skeleton-line chat-carousel-skeleton-line--desc" />
+                          <div className="chat-carousel-skeleton-line chat-carousel-skeleton-line--desc-short" />
+                          <div className="chat-carousel-skeleton-line chat-carousel-skeleton-line--cta" />
+                        </div>
+                      ))
+                    : null}
                 </div>
                 {message.recommendationNext ? (
                   <button

@@ -231,6 +231,52 @@
   border-color: rgba(var(--chat-primary-rgb), 0.65);
 }
 
+.chat-carousel-card--skeleton {
+  pointer-events: none;
+  border-style: dashed;
+  border-color: rgba(var(--chat-primary-rgb), 0.22);
+  background: #ffffff;
+  padding: 0.78rem 0.82rem;
+  gap: 0.58rem;
+  justify-content: space-between;
+}
+
+.chat-carousel-skeleton-line {
+  width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.9) 20%,
+    rgba(241, 245, 249, 0.95) 38%,
+    rgba(226, 232, 240, 0.9) 56%
+  );
+  background-size: 200% 100%;
+  animation: ai-agent-skeleton 1.2s linear infinite;
+}
+
+.chat-carousel-skeleton-line--chip {
+  width: 34%;
+  height: 0.9rem;
+}
+
+.chat-carousel-skeleton-line--title {
+  height: 1rem;
+}
+
+.chat-carousel-skeleton-line--desc {
+  height: 0.72rem;
+}
+
+.chat-carousel-skeleton-line--desc-short {
+  width: 72%;
+  height: 0.72rem;
+}
+
+.chat-carousel-skeleton-line--cta {
+  margin-top: 0.65rem;
+  height: 2rem;
+}
+
 .chat-carousel-card-header {
   padding: 0.58rem 0.82rem 0.12rem;
   display: flex;
@@ -436,6 +482,15 @@
   40% {
     transform: translateY(-2px);
     opacity: 1;
+  }
+}
+
+@keyframes ai-agent-skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }
 
