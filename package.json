@@ -1,6 +1,6 @@
 {
   "name": "@rizal_ncc/agent-client",
-  "version": "0.2.0",
+  "version": "1.4.0",
   "description": "UI wrapper and helpers for BAWANA AI agent integrations",
   "author": "Rizal Suryawan - (BAWANA Team)",
   "license": "MIT",
