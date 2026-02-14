@@ -25,11 +25,12 @@ export default function App() {
       </header>
 
       <AiAgentChat
+        layout="floating"
         baseURL={BASE_URL}
         accessToken={ACCESS_TOKEN}
         agent={AGENT}
         initials={false}
-        primaryColor="#00a8b4"
+        primaryColor="#b4a200"
         primaryForeground="#ffffff"
         headerTitle="BAWANA Assistant"
         headerDescription="Online and ready to help"

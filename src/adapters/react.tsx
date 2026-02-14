@@ -116,6 +116,15 @@ export interface AiAgentChatProps {
   placeholder?: string;
   sendLabel?: string;
   stopLabel?: string;
+  layout?: "inline" | "floating" | "dropdown";
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  panelHeight?: string;
+  floatingPosition?: "bottom-right" | "bottom-left";
+  zIndex?: number;
+  openLabel?: string;
+  closeLabel?: string;
 }
 
 async function resolveAccessToken(
@@ -223,12 +232,30 @@ export function AiAgentChat({
   placeholder = "Ask the assistant...",
   sendLabel = "Send",
   stopLabel = "Stop",
+  layout = "inline",
+  open,
+  defaultOpen,
+  onOpenChange,
+  panelHeight,
+  floatingPosition = "bottom-right",
+  zIndex = 60,
+  openLabel = "Open chat",
+  closeLabel = "Close chat",
 }: AiAgentChatProps) {
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [loadingMoreMessageIds, setLoadingMoreMessageIds] = useState<
     Record<string, boolean>
   >({});
+  const [internalOpen, setInternalOpen] = useState<boolean>(() => {
+    if (layout === "inline") {
+      return true;
+    }
+    if (typeof defaultOpen === "boolean") {
+      return defaultOpen;
+    }
+    return false;
+  });
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const resolvedMetadata = useMemo(
     () => metadata || EMPTY_METADATA,
@@ -380,6 +407,39 @@ export function AiAgentChat({
   );
 
   const hasUserMessage = messages.some((message) => message.role === "user");
+  const isControlledOpen = typeof open === "boolean";
+  const isOpen =
+    layout === "inline" ? true : isControlledOpen ? (open as boolean) : internalOpen;
+
+  const setOpenState = useCallback(
+    (nextOpen: boolean) => {
+      if (layout === "inline") {
+        return;
+      }
+      if (!isControlledOpen) {
+        setInternalOpen(nextOpen);
+      }
+      if (typeof onOpenChange === "function") {
+        onOpenChange(nextOpen);
+      }
+    },
+    [isControlledOpen, layout, onOpenChange],
+  );
+
+  useEffect(() => {
+    if (isControlledOpen) {
+      return;
+    }
+    if (layout === "inline") {
+      setInternalOpen(true);
+      return;
+    }
+    if (typeof defaultOpen === "boolean") {
+      setInternalOpen(defaultOpen);
+      return;
+    }
+    setInternalOpen(false);
+  }, [defaultOpen, isControlledOpen, layout]);
 
   // auto scroll
   useEffect(() => {
@@ -472,18 +532,22 @@ export function AiAgentChat({
       updateMessageById,
     ],
   );
-  const themeStyle = useMemo(
+  const shellStyle = useMemo(
     () =>
       ({
         "--chat-primary": primaryColor,
         "--chat-primary-rgb": resolvePrimaryRgb(primaryColor),
         "--chat-primary-foreground": primaryForeground,
+        ...(typeof panelHeight === "string" && panelHeight.trim()
+          ? { "--chat-panel-height": panelHeight.trim() }
+          : {}),
+        "--chat-shell-z-index": zIndex,
       }) as CSSProperties,
-    [primaryColor, primaryForeground],
+    [panelHeight, primaryColor, primaryForeground, zIndex],
   );
 
-  return (
-    <section className={`ai-agent-chat ${className}`.trim()} style={themeStyle}>
+  const chatPanel = (
+    <section className={`ai-agent-chat ${className}`.trim()}>
       <header className="ai-agent-chat__header">
         <div className="ai-agent-chat__header-avatar" aria-hidden="true">
           {assistantAvatar ? (
@@ -734,5 +798,89 @@ export function AiAgentChat({
         <p className="ai-agent-chat__error">{errorMessage}</p>
       ) : null}
     </section>
+  );
+
+  if (layout === "floating") {
+    return (
+      <div
+        className={`ai-agent-chat-shell ai-agent-chat-shell--floating ai-agent-chat-shell--${floatingPosition} ${isOpen ? "ai-agent-chat-shell--open" : "ai-agent-chat-shell--closed"}`.trim()}
+        style={shellStyle}
+      >
+        <div className="ai-agent-chat-shell__panel">{chatPanel}</div>
+        <button
+          type="button"
+          className={`ai-agent-chat-shell__toggle ai-agent-chat-shell__toggle--floating ${isOpen ? "is-open" : ""}`.trim()}
+          onClick={() => setOpenState(!isOpen)}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? closeLabel : openLabel}
+          title={isOpen ? closeLabel : openLabel}
+        >
+          <svg
+            className="ai-agent-chat-shell__toggle-icon ai-agent-chat-shell__toggle-icon--open"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M12 6V2H8" />
+            <path d="M15 11v2" />
+            <path d="M2 12h2" />
+            <path d="M20 12h2" />
+            <path d="M20 16a2 2 0 0 1-2 2H8.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 4 20.286V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" />
+            <path d="M9 11v2" />
+          </svg>
+          <svg
+            className="ai-agent-chat-shell__toggle-icon ai-agent-chat-shell__toggle-icon--close"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
+            <path d="m14.5 8.5-5 5" />
+            <path d="m9.5 8.5 5 5" />
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
+  if (layout === "dropdown") {
+    return (
+      <div
+        className={`ai-agent-chat-shell ai-agent-chat-shell--dropdown ${isOpen ? "ai-agent-chat-shell--open" : "ai-agent-chat-shell--closed"}`.trim()}
+        style={shellStyle}
+      >
+        <button
+          type="button"
+          className="ai-agent-chat-shell__toggle ai-agent-chat-shell__toggle--dropdown"
+          onClick={() => setOpenState(!isOpen)}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? closeLabel : openLabel}
+          title={isOpen ? closeLabel : openLabel}
+        >
+          <span className="ai-agent-chat-shell__toggle-copy">
+            <strong>{headerTitle}</strong>
+            <span>{headerDescription}</span>
+          </span>
+          <span className="ai-agent-chat-shell__caret" aria-hidden="true" />
+        </button>
+        <div className="ai-agent-chat-shell__panel">{chatPanel}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ai-agent-chat-shell ai-agent-chat-shell--inline" style={shellStyle}>
+      {chatPanel}
+    </div>
   );
 }

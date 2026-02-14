@@ -39,6 +39,51 @@ function recommendation(id: number, title: string): RecommendationItem {
 }
 
 describe("AiAgentChat UI", () => {
+  it("toggles dropdown layout open state", async () => {
+    const { container } = render(
+      <AiAgentChat
+        layout="dropdown"
+        generateResponse={vi.fn().mockResolvedValue({ content: "ok" })}
+      />,
+    );
+    const user = userEvent.setup();
+    const toggle = screen.getByRole("button", { name: "Open chat" });
+
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(
+      container.querySelector(".ai-agent-chat-shell--dropdown.ai-agent-chat-shell--open"),
+    ).toBeNull();
+
+    await user.click(toggle);
+
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(
+      container.querySelector(".ai-agent-chat-shell--dropdown.ai-agent-chat-shell--open"),
+    ).toBeTruthy();
+  });
+
+  it("toggles floating layout and calls onOpenChange", async () => {
+    const onOpenChange = vi.fn();
+    const { container } = render(
+      <AiAgentChat
+        layout="floating"
+        generateResponse={vi.fn().mockResolvedValue({ content: "ok" })}
+        onOpenChange={onOpenChange}
+      />,
+    );
+    const user = userEvent.setup();
+    const toggle = screen.getByRole("button", { name: "Open chat" });
+
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+
+    await user.click(toggle);
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(
+      container.querySelector(".ai-agent-chat-shell--floating.ai-agent-chat-shell--open"),
+    ).toBeTruthy();
+  });
+
   it("shows typing indicator while generating and hides it after response", async () => {
     const pending = deferred<GenerateResponseResult>();
     const generateResponse = vi.fn().mockReturnValue(pending.promise);

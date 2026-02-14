@@ -33,6 +33,13 @@ export function App() {
 }
 ```
 
+Layout examples:
+
+```tsx
+<AiAgentChat layout="floating" defaultOpen={false} />
+<AiAgentChat layout="dropdown" defaultOpen={false} panelHeight="560px" />
+```
+
 ## Chat Component Props (AiAgentChat)
 
 Common props:
@@ -50,6 +57,13 @@ Common props:
 - `primaryForeground?: string` text color on primary surfaces (default `#ffffff`)
 - `metadata?: { course_id?: number }`
 - `requestHeaders?: HeadersInit`
+- `layout?: "inline" | "floating" | "dropdown"` (default `inline`)
+- `open?: boolean` controlled open state for `floating`/`dropdown`
+- `defaultOpen?: boolean` uncontrolled initial open state
+- `onOpenChange?: (open: boolean) => void`
+- `panelHeight?: string` panel height (default `"620px"`)
+- `floatingPosition?: "bottom-right" | "bottom-left"` (default `bottom-right`)
+- `zIndex?: number` (default `60`)
 
 UX behavior:
 
