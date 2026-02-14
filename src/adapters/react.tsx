@@ -5,11 +5,14 @@ import {
   useMemo,
   useRef,
   useState,
-  type FormEvent,
-  type ReactNode
+  type SubmitEvent,
+  type ReactNode,
 } from "react";
 import { ChatbotCore } from "../core/chatbot";
-import { extractRecommendationItems, extractRecommendationOutput } from "../lib/tool-results";
+import {
+  extractRecommendationItems,
+  extractRecommendationOutput,
+} from "../lib/tool-results";
 import { mergeRecommendationItems } from "../lib/recommendation-pagination";
 import type {
   AgentMetadata,
@@ -17,7 +20,7 @@ import type {
   ChatbotCoreConfig,
   ChatbotState,
   GenerateResponse,
-  RespondResponse
+  RespondResponse,
 } from "../core/types";
 
 const EMPTY_METADATA: AgentMetadata = {};
@@ -27,15 +30,17 @@ export interface UseAiAgentChatResult extends ChatbotState {
   stop: () => void;
   updateMessageById: (
     messageId: string,
-    updater: (message: ChatMessage) => ChatMessage
+    updater: (message: ChatMessage) => ChatMessage,
   ) => void;
 }
 
-export function useAiAgentChat(config: ChatbotCoreConfig): UseAiAgentChatResult {
+export function useAiAgentChat(
+  config: ChatbotCoreConfig,
+): UseAiAgentChatResult {
   const coreRef = useRef<ChatbotCore | null>(null);
   const [state, setState] = useState<ChatbotState>({
     messages: [],
-    isLoading: false
+    isLoading: false,
   });
 
   useEffect(() => {
@@ -74,14 +79,14 @@ export function useAiAgentChat(config: ChatbotCoreConfig): UseAiAgentChatResult 
       }
       coreRef.current.updateMessageById(messageId, updater);
     },
-    []
+    [],
   );
 
   return {
     ...state,
     sendMessage,
     stop,
-    updateMessageById
+    updateMessageById,
   };
 }
 
@@ -91,7 +96,9 @@ export interface AiAgentChatProps {
   onMessage?: ChatbotCoreConfig["onMessage"];
   onError?: ChatbotCoreConfig["onError"];
   baseURL?: string;
-  accessToken?: string | (() => string | undefined | Promise<string | undefined>);
+  accessToken?:
+    | string
+    | (() => string | undefined | Promise<string | undefined>);
   agent?: string;
   metadata?: AgentMetadata;
   requestHeaders?: HeadersInit;
@@ -112,7 +119,7 @@ export interface AiAgentChatProps {
 }
 
 async function resolveAccessToken(
-  provider: AiAgentChatProps["accessToken"]
+  provider: AiAgentChatProps["accessToken"],
 ): Promise<string | undefined> {
   if (!provider) {
     return undefined;
@@ -133,7 +140,13 @@ function hexToRgb(hex: string): string | null {
   if (![3, 6].includes(value.length) || !/^[a-fA-F0-9]+$/.test(value)) {
     return null;
   }
-  const full = value.length === 3 ? value.split("").map((char) => `${char}${char}`).join("") : value;
+  const full =
+    value.length === 3
+      ? value
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : value;
   const red = Number.parseInt(full.slice(0, 2), 16);
   const green = Number.parseInt(full.slice(2, 4), 16);
   const blue = Number.parseInt(full.slice(4, 6), 16);
@@ -209,18 +222,26 @@ export function AiAgentChat({
   className = "",
   placeholder = "Ask the assistant...",
   sendLabel = "Send",
-  stopLabel = "Stop"
+  stopLabel = "Stop",
 }: AiAgentChatProps) {
   const [input, setInput] = useState("");
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [loadingMoreMessageIds, setLoadingMoreMessageIds] = useState<Record<string, boolean>>({});
-  const resolvedMetadata = useMemo(() => metadata || EMPTY_METADATA, [metadata]);
+  const [loadingMoreMessageIds, setLoadingMoreMessageIds] = useState<
+    Record<string, boolean>
+  >({});
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const resolvedMetadata = useMemo(
+    () => metadata || EMPTY_METADATA,
+    [metadata],
+  );
   const normalizedSuggestions = useMemo(
     () =>
       Array.isArray(suggestedMessages)
-        ? suggestedMessages.filter((item) => typeof item === "string" && item.trim().length > 0)
+        ? suggestedMessages.filter(
+            (item) => typeof item === "string" && item.trim().length > 0,
+          )
         : [],
-    [suggestedMessages]
+    [suggestedMessages],
   );
 
   const transport = useCallback<GenerateResponse>(
@@ -230,13 +251,15 @@ export function AiAgentChat({
       }
 
       if (!baseURL || !baseURL.trim()) {
-        throw new Error("AiAgentChat requires `baseURL` when `generateResponse` is not provided.");
+        throw new Error(
+          "AiAgentChat requires `baseURL` when `generateResponse` is not provided.",
+        );
       }
 
       const token = await resolveAccessToken(accessToken);
       if (!token) {
         throw new Error(
-          "AiAgentChat requires `accessToken` when `generateResponse` is not provided."
+          "AiAgentChat requires `accessToken` when `generateResponse` is not provided.",
         );
       }
 
@@ -244,22 +267,29 @@ export function AiAgentChat({
       headers.set("content-type", "application/json");
       headers.set("authorization", `Bearer ${token}`);
 
-      const latestUser = [...messages].reverse().find((item) => item.role === "user");
+      const latestUser = [...messages]
+        .reverse()
+        .find((item) => item.role === "user");
       const userMessage = latestUser?.content || "";
 
       const resolvedPath = resolveRespondPath(baseURL, respondPath);
-      const response = await fetch(`${normalizeBaseURL(baseURL)}${resolvedPath}`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          agent,
-          message: userMessage,
-          metadata: resolvedMetadata
-        }),
-        signal
-      });
+      const response = await fetch(
+        `${normalizeBaseURL(baseURL)}${resolvedPath}`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            agent,
+            message: userMessage,
+            metadata: resolvedMetadata,
+          }),
+          signal,
+        },
+      );
 
-      const raw = (await response.json()) as RespondResponse | { detail?: string; message?: string };
+      const raw = (await response.json()) as
+        | RespondResponse
+        | { detail?: string; message?: string };
       if (!response.ok) {
         const detail =
           typeof raw === "object" && raw
@@ -269,7 +299,9 @@ export function AiAgentChat({
                 ? raw.message
                 : ""
             : "";
-        throw new Error(`AI Agent request failed (${response.status})${detail ? `: ${detail}` : ""}`);
+        throw new Error(
+          `AI Agent request failed (${response.status})${detail ? `: ${detail}` : ""}`,
+        );
       }
 
       const backendResponse = raw as RespondResponse;
@@ -278,7 +310,7 @@ export function AiAgentChat({
         content: backendResponse.message,
         toolResults: backendResponse.tool_results,
         recommendations: extractRecommendationItems(backendResponse),
-        recommendationNext: recommendationOutput?.next ?? null
+        recommendationNext: recommendationOutput?.next ?? null,
       };
     },
     [
@@ -288,8 +320,8 @@ export function AiAgentChat({
       generateResponse,
       requestHeaders,
       respondPath,
-      resolvedMetadata
-    ]
+      resolvedMetadata,
+    ],
   );
 
   const stableConfig = useMemo<ChatbotCoreConfig>(
@@ -301,15 +333,16 @@ export function AiAgentChat({
         if (typeof onError === "function") {
           onError(error, messages);
         }
-      }
+      },
     }),
-    [onError, onMessage, transport]
+    [onError, onMessage, transport],
   );
 
-  const { messages, isLoading, sendMessage, stop, updateMessageById } = useAiAgentChat(stableConfig);
+  const { messages, isLoading, sendMessage, stop, updateMessageById } =
+    useAiAgentChat(stableConfig);
 
   const onSubmit = useCallback(
-    async (event: FormEvent<HTMLFormElement>) => {
+    async (event: SubmitEvent<HTMLFormElement>) => {
       event.preventDefault();
       const value = input.trim();
       if (!value.length || isLoading) {
@@ -320,11 +353,12 @@ export function AiAgentChat({
       try {
         await sendMessage(value);
       } catch (error) {
-        const nextError = error instanceof Error ? error.message : "Failed to send message.";
+        const nextError =
+          error instanceof Error ? error.message : "Failed to send message.";
         setErrorMessage(nextError);
       }
     },
-    [input, isLoading, sendMessage]
+    [input, isLoading, sendMessage],
   );
 
   const onSuggestionClick = useCallback(
@@ -337,14 +371,25 @@ export function AiAgentChat({
       try {
         await sendMessage(text);
       } catch (error) {
-        const nextError = error instanceof Error ? error.message : "Failed to send message.";
+        const nextError =
+          error instanceof Error ? error.message : "Failed to send message.";
         setErrorMessage(nextError);
       }
     },
-    [isLoading, sendMessage]
+    [isLoading, sendMessage],
   );
 
   const hasUserMessage = messages.some((message) => message.role === "user");
+
+  // auto scroll
+  useEffect(() => {
+    const node = messagesContainerRef.current;
+    if (!node) {
+      return;
+    }
+    node.scrollTop = node.scrollHeight;
+  }, [messages, isLoading]);
+
   const loadMoreRecommendations = useCallback(
     async (messageId: string, nextUrl: string) => {
       if (!nextUrl || loadingMoreMessageIds[messageId]) {
@@ -366,10 +411,13 @@ export function AiAgentChat({
         const headers = new Headers(requestHeaders);
         headers.set("authorization", `Bearer ${token}`);
 
-        const requestUrl = new URL(nextUrl, `${normalizeBaseURL(baseURL)}/`).toString();
+        const requestUrl = new URL(
+          nextUrl,
+          `${normalizeBaseURL(baseURL)}/`,
+        ).toString();
         const response = await fetch(requestUrl, {
           method: "GET",
-          headers
+          headers,
         });
         const raw = (await response.json()) as {
           next?: string | null;
@@ -386,7 +434,7 @@ export function AiAgentChat({
                 ? raw.message
                 : "";
           throw new Error(
-            `Load more failed (${response.status})${detail ? `: ${detail}` : ""}`
+            `Load more failed (${response.status})${detail ? `: ${detail}` : ""}`,
           );
         }
 
@@ -395,31 +443,43 @@ export function AiAgentChat({
           typeof raw?.next === "string" || raw?.next === null ? raw.next : null;
 
         updateMessageById(messageId, (message) => {
-          const current = Array.isArray(message.recommendations) ? message.recommendations : [];
+          const current = Array.isArray(message.recommendations)
+            ? message.recommendations
+            : [];
           const merged = mergeRecommendationItems(current, newResults);
 
           return {
             ...message,
             recommendations: merged,
-            recommendationNext: nextPointer
+            recommendationNext: nextPointer,
           };
         });
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Failed to load more recommendations.");
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Failed to load more recommendations.",
+        );
       } finally {
         setLoadingMoreMessageIds((prev) => ({ ...prev, [messageId]: false }));
       }
     },
-    [accessToken, baseURL, loadingMoreMessageIds, requestHeaders, updateMessageById]
+    [
+      accessToken,
+      baseURL,
+      loadingMoreMessageIds,
+      requestHeaders,
+      updateMessageById,
+    ],
   );
   const themeStyle = useMemo(
     () =>
       ({
         "--chat-primary": primaryColor,
         "--chat-primary-rgb": resolvePrimaryRgb(primaryColor),
-        "--chat-primary-foreground": primaryForeground
+        "--chat-primary-foreground": primaryForeground,
       }) as CSSProperties,
-    [primaryColor, primaryForeground]
+    [primaryColor, primaryForeground],
   );
 
   return (
@@ -430,8 +490,10 @@ export function AiAgentChat({
             assistantAvatar
           ) : assistantAvatarUrl ? (
             <img src={assistantAvatarUrl} alt="" />
+          ) : initials ? (
+            assistantInitials
           ) : (
-            (initials ? assistantInitials : "")
+            ""
           )}
         </div>
         <div className="ai-agent-chat__header-copy">
@@ -455,7 +517,12 @@ export function AiAgentChat({
         </div>
       ) : null}
 
-      <div className="ai-agent-chat__messages" role="log" aria-live="polite">
+      <div
+        className="ai-agent-chat__messages"
+        role="log"
+        aria-live="polite"
+        ref={messagesContainerRef}
+      >
         {messages.map((message) => (
           <article
             key={message.id}
@@ -463,20 +530,33 @@ export function AiAgentChat({
           >
             {initials ? (
               <span className="ai-agent-chat__message-role">
-                {message.role === "assistant" ? assistantInitials : userInitials}
+                {message.role === "assistant"
+                  ? assistantInitials
+                  : userInitials}
               </span>
             ) : null}
             <p>{message.content}</p>
-            {Array.isArray(message.recommendations) && message.recommendations.length > 0 ? (
+            {Array.isArray(message.recommendations) &&
+            message.recommendations.length > 0 ? (
               <div className="ai-agent-chat__recommendation-block">
                 <div className="chat-carousel">
                   {message.recommendations.map((item) => {
                     const status =
-                      typeof item.status === "string" && item.status.trim() ? item.status.trim() : "";
-                    const type = typeof item.type === "string" && item.type.trim() ? item.type.trim() : "";
-                    const hasProgress = typeof item.progress === "number" && Number.isFinite(item.progress);
+                      typeof item.status === "string" && item.status.trim()
+                        ? item.status.trim()
+                        : "";
+                    const type =
+                      typeof item.type === "string" && item.type.trim()
+                        ? item.type.trim()
+                        : "";
+                    const hasProgress =
+                      typeof item.progress === "number" &&
+                      Number.isFinite(item.progress);
                     const progressValue = hasProgress
-                      ? Math.min(100, Math.max(0, Math.round(item.progress as number)))
+                      ? Math.min(
+                          100,
+                          Math.max(0, Math.round(item.progress as number)),
+                        )
                       : 0;
 
                     return (
@@ -488,7 +568,11 @@ export function AiAgentChat({
                         rel="noreferrer"
                       >
                         <div className="chat-carousel-card-header">
-                          {type ? <span className="chat-carousel-chip chat-carousel-chip--type">{type}</span> : null}
+                          {type ? (
+                            <span className="chat-carousel-chip chat-carousel-chip--type">
+                              {type}
+                            </span>
+                          ) : null}
                           {status ? (
                             <span
                               className="chat-carousel-chip chat-carousel-chip--status"
@@ -498,20 +582,28 @@ export function AiAgentChat({
                             </span>
                           ) : null}
                           {item.in_playlist ? (
-                            <span className="chat-carousel-chip chat-carousel-chip--muted">In playlist</span>
+                            <span className="chat-carousel-chip chat-carousel-chip--muted">
+                              In playlist
+                            </span>
                           ) : null}
                         </div>
 
                         <div className="chat-carousel-card-content">
-                          <div className="chat-carousel-card-title">{item.title || "Untitled Course"}</div>
-                          <div className="chat-carousel-card-desc">{item.description || ""}</div>
+                          <div className="chat-carousel-card-title">
+                            {item.title || "Untitled Course"}
+                          </div>
+                          <div className="chat-carousel-card-desc">
+                            {item.description || ""}
+                          </div>
                         </div>
 
                         <div className="chat-carousel-card-footer">
                           <div className="chat-carousel-meta">
                             {hasProgress ? (
                               <>
-                                <span className="chat-carousel-meta-text">{progressValue}% complete</span>
+                                <span className="chat-carousel-meta-text">
+                                  {progressValue}% complete
+                                </span>
                                 <div className="chat-carousel-progress">
                                   <div
                                     className="chat-carousel-progress-bar"
@@ -535,12 +627,20 @@ export function AiAgentChat({
                   <button
                     type="button"
                     className="ai-agent-chat__loadmore"
-                    onClick={() => void loadMoreRecommendations(message.id, message.recommendationNext!)}
+                    onClick={() =>
+                      void loadMoreRecommendations(
+                        message.id,
+                        message.recommendationNext!,
+                      )
+                    }
                     disabled={Boolean(loadingMoreMessageIds[message.id])}
                   >
                     {loadingMoreMessageIds[message.id] ? (
                       <>
-                        <span className="ai-agent-chat__spinner" aria-hidden="true" />
+                        <span
+                          className="ai-agent-chat__spinner"
+                          aria-hidden="true"
+                        />
                         Loading...
                       </>
                     ) : (
@@ -552,6 +652,20 @@ export function AiAgentChat({
             ) : null}
           </article>
         ))}
+        {isLoading ? (
+          <article className="ai-agent-chat__message ai-agent-chat__message--assistant ai-agent-chat__message--typing">
+            {initials ? (
+              <span className="ai-agent-chat__message-role">
+                {assistantInitials}
+              </span>
+            ) : null}
+            <p className="ai-agent-chat__typing">
+              <span className="ai-agent-chat__typing-dot" aria-hidden="true" />
+              <span className="ai-agent-chat__typing-dot" aria-hidden="true" />
+              <span className="ai-agent-chat__typing-dot" aria-hidden="true" />
+            </p>
+          </article>
+        ) : null}
       </div>
 
       <form className="ai-agent-chat__composer" onSubmit={onSubmit}>
@@ -570,18 +684,28 @@ export function AiAgentChat({
           title={isLoading ? stopLabel : sendLabel}
         >
           {isLoading ? (
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <rect x="7" y="7" width="10" height="10" rx="2" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path d="M5.25 3A2.25 2.25 0 0 0 3 5.25v9.5A2.25 2.25 0 0 0 5.25 17h9.5A2.25 2.25 0 0 0 17 14.75v-9.5A2.25 2.25 0 0 0 14.75 3h-9.5Z" />
             </svg>
           ) : (
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M3 11.5 20.5 4c.8-.3 1.5.5 1.2 1.2L14.2 22.7c-.4 1-1.8 1-2.2 0l-2.1-5.1-5.1-2.1c-1-.4-1-1.8 0-2.2Z" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95 28.897 28.897 0 0 0 15.293-7.155.75.75 0 0 0 0-1.114A28.897 28.897 0 0 0 3.105 2.288Z" />
             </svg>
           )}
         </button>
       </form>
 
-      {errorMessage ? <p className="ai-agent-chat__error">{errorMessage}</p> : null}
+      {errorMessage ? (
+        <p className="ai-agent-chat__error">{errorMessage}</p>
+      ) : null}
     </section>
   );
 }
