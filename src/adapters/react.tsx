@@ -861,19 +861,32 @@ export function AiAgentChat({
       >
         <button
           type="button"
-          className="ai-agent-chat-shell__toggle ai-agent-chat-shell__toggle--dropdown"
+          className={`ai-agent-chat-shell__toggle ai-agent-chat-shell__toggle--dropdown ${isOpen ? "is-open" : ""}`.trim()}
           onClick={() => setOpenState(!isOpen)}
           aria-expanded={isOpen}
           aria-label={isOpen ? closeLabel : openLabel}
           title={isOpen ? closeLabel : openLabel}
         >
+          <span className="ai-agent-chat-shell__toggle-avatar" aria-hidden="true">
+            {assistantAvatar ? (
+              assistantAvatar
+            ) : assistantAvatarUrl ? (
+              <img src={assistantAvatarUrl} alt="" />
+            ) : initials ? (
+              assistantInitials
+            ) : (
+              ""
+            )}
+          </span>
           <span className="ai-agent-chat-shell__toggle-copy">
             <strong>{headerTitle}</strong>
             <span>{headerDescription}</span>
           </span>
           <span className="ai-agent-chat-shell__caret" aria-hidden="true" />
         </button>
-        <div className="ai-agent-chat-shell__panel">{chatPanel}</div>
+        <div className={`ai-agent-chat-shell__panel ${isOpen ? "is-open" : ""}`.trim()}>
+          {chatPanel}
+        </div>
       </div>
     );
   }
