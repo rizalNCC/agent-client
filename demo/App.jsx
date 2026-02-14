@@ -29,15 +29,14 @@ export default function App() {
         accessToken={ACCESS_TOKEN}
         agent={AGENT}
         initials={false}
-        primaryColor="#085094"
+        primaryColor="#00a8b4"
         primaryForeground="#ffffff"
         headerTitle="BAWANA Assistant"
         headerDescription="Online and ready to help"
         suggestedMessages={[
           "hai siapa kamu ?",
           "berikan saran course kepemimpinan",
-          "recommend data analysis course",
-          "recommend communication course",
+          "recommend data course",
         ]}
       />
     </main>

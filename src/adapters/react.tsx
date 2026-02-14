@@ -502,27 +502,24 @@ export function AiAgentChat({
         </div>
       </header>
 
-      {!hasUserMessage && normalizedSuggestions.length > 0 ? (
-        <div className="ai-agent-chat__suggestions">
-          {normalizedSuggestions.map((text) => (
-            <button
-              key={text}
-              type="button"
-              onClick={() => void onSuggestionClick(text)}
-              disabled={isLoading}
-            >
-              {text}
-            </button>
-          ))}
-        </div>
-      ) : null}
-
       <div
         className="ai-agent-chat__messages"
         role="log"
         aria-live="polite"
         ref={messagesContainerRef}
       >
+        {!messages.length && !isLoading ? (
+          <div className="ai-agent-chat__empty" aria-hidden="true">
+            <div className="ai-agent-chat__empty-icon">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 2.5a.75.75 0 0 1 .73.57l1.02 4a.75.75 0 0 0 .53.53l4 1.02a.75.75 0 0 1 0 1.46l-4 1.02a.75.75 0 0 0-.53.53l-1.02 4a.75.75 0 0 1-1.46 0l-1.02-4a.75.75 0 0 0-.53-.53l-4-1.02a.75.75 0 0 1 0-1.46l4-1.02a.75.75 0 0 0 .53-.53l1.02-4A.75.75 0 0 1 12 2.5Z" />
+                <path d="M18.5 15a.75.75 0 0 1 .73.57l.35 1.37a.75.75 0 0 0 .53.53l1.37.35a.75.75 0 0 1 0 1.46l-1.37.35a.75.75 0 0 0-.53.53l-.35 1.37a.75.75 0 0 1-1.46 0l-.35-1.37a.75.75 0 0 0-.53-.53l-1.37-.35a.75.75 0 0 1 0-1.46l1.37-.35a.75.75 0 0 0 .53-.53l.35-1.37a.75.75 0 0 1 .73-.57Z" />
+              </svg>
+            </div>
+            <strong>Start a conversation</strong>
+            <span>Ask about courses, recommendations, or learning plans.</span>
+          </div>
+        ) : null}
         {messages.map((message) => (
           <article
             key={message.id}
@@ -682,6 +679,21 @@ export function AiAgentChat({
           </article>
         ) : null}
       </div>
+
+      {!hasUserMessage && normalizedSuggestions.length > 0 ? (
+        <div className="ai-agent-chat__suggestions">
+          {normalizedSuggestions.map((text) => (
+            <button
+              key={text}
+              type="button"
+              onClick={() => void onSuggestionClick(text)}
+              disabled={isLoading}
+            >
+              {text}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <form className="ai-agent-chat__composer" onSubmit={onSubmit}>
         <input
