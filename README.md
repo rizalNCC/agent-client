@@ -19,14 +19,14 @@ import "@rizal_ncc/agent-client/style.css";
 export function App() {
   return (
     <AiAgentChat
-      baseURL="https://api.example.com/api"
+      baseURL="https://example.com/api"
       accessToken="your-access-token-here"
       agent="home-assistant"
       primaryColor="#0f766e"
       primaryForeground="#ffffff"
       suggestedMessages={[
         "recommend leadership course",
-        "recommend data analysis course"
+        "recommend data analysis course",
       ]}
     />
   );
@@ -94,7 +94,7 @@ Recommendation UI behavior:
 import { ChatbotCore } from "@rizal_ncc/agent-client";
 
 const bot = new ChatbotCore({
-  generateResponse: async () => ({ content: "Hello" })
+  generateResponse: async () => ({ content: "Hello" }),
 });
 
 await bot.sendMessage("Hi");
@@ -136,7 +136,7 @@ npm run build
 Demo env:
 
 ```bash
-VITE_API_BASE_URL=http://ncc-stg.api.bawana:8000/api/
+VITE_API_BASE_URL=http://example.com/
 VITE_AI_AGENT_TOKEN=<access_token>
 VITE_AI_AGENT_AGENT=home-assistant
 ```
